@@ -1,4 +1,4 @@
-import Book from 'components/book';
+import Book from './Book';
 import React from 'react';
 
 const App = React.createClass({
@@ -25,48 +25,112 @@ const App = React.createClass({
         stock: 11,
         title: 'The Martian',
         year: 2014
-      }]
+      }],
+
+      editing: null
     };
   },
 
-  increaseStock(book) {
-    if (book.stock === 999) {
+  decreaseStock(book) {
+    const editing = this.state.editing;
+
+    if (editing && editing.stock === '') {
       return;
     }
+
+    let nextBook;
 
     const nextBooks = this.state.books.map((element) => {
       if (book !== element) {
         return element;
       }
 
-      const nextStock = book.stock + 1;
+      if (book.stock === 0) {
+        nextBook = book;
 
-      const nextBook = Object.assign({}, book, { stock: nextStock });
-
-      return nextBook;
-    });
-
-    this.setState({ books: nextBooks });
-  },
-
-  decreaseStock(book) {
-    if (book.stock === 0) {
-      return;
-    }
-
-    const nextBooks = this.state.books.map((element) => {
-      if (book !== element) {
-        return element;
+        return book;
       }
 
       const nextStock = book.stock - 1;
 
-      const nextBook = Object.assign({}, book, { stock: nextStock });
+      nextBook = Object.assign({}, book, { stock: nextStock });
 
       return nextBook;
     });
 
-    this.setState({ books: nextBooks });
+    const nextState = { books: nextBooks };
+
+    if (this.state.editing) {
+      nextState.editing = nextBook;
+    }
+
+    this.setState(nextState);
+  },
+
+  increaseStock(book) {
+    const editing = this.state.editing;
+
+    if (editing && editing.stock === '') {
+      return;
+    }
+
+    let nextBook;
+
+    const nextBooks = this.state.books.map((element) => {
+      if (book !== element) {
+        return element;
+      }
+
+      if (book.stock === 999) {
+        nextBook = book;
+
+        return book;
+      }
+
+      const nextStock = book.stock + 1;
+
+      nextBook = Object.assign({}, book, { stock: nextStock });
+
+      return nextBook;
+    });
+
+    const nextState = { books: nextBooks };
+
+    if (this.state.editing) {
+      nextState.editing = nextBook;
+    }
+
+    this.setState(nextState);
+  },
+
+  startEditing(book) {
+    const editing = this.state.editing;
+
+    if (editing && editing.stock === '') {
+      return;
+    }
+
+    this.setState({ editing: book });
+  },
+
+  stopEditing() {
+    this.setState({ editing: null });
+  },
+
+  updateStock(book, nextStock) {
+    let nextBook;
+
+    const nextBooks = this.state.books.map((element) => {
+      if (book !== element) {
+        return element;
+      }
+
+      nextBook = Object.assign({}, book, { stock: nextStock });
+
+      return nextBook;
+    });
+
+    this.setState({ books: nextBooks, editing: nextBook });
   },
 
   render() {
@@ -89,9 +153,14 @@ const App = React.createClass({
             return <Book
               book={book}
               decreaseStock={this.decreaseStock}
+              editing={this.state.editing}
               format={formatting}
               increaseStock={this.increaseStock}
+              index={index}
               key={index}
+              startEditing={this.startEditing}
+              stopEditing={this.stopEditing}
+              updateStock={this.updateStock}
             />;
           })}
         </tbody>
